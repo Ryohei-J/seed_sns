@@ -33,12 +33,12 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="index.html"><span class="strong-title"><i class="fa fa-twitter-square"></i> Seed SNS</span></a>
+              <a class="navbar-brand" href="index.php"><span class="strong-title"><i class="fa fa-twitter-square"></i> Seed SNS</span></a>
           </div>
           <!-- Collect the nav links, forms, and other content for toggling -->
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav navbar-right">
-                <li><a href="logout.html">ログアウト</a></li>
+                <li><a href="logout.php">ログアウト</a></li>
               </ul>
           </div>
           <!-- /.navbar-collapse -->
@@ -61,9 +61,9 @@
           <ul class="paging">
             <input type="submit" class="btn btn-info" value="つぶやく">
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                <li><a href="index.html" class="btn btn-default">前</a></li>
+                <li><a href="index.php" class="btn btn-default">前</a></li>
                 &nbsp;&nbsp;|&nbsp;&nbsp;
-                <li><a href="index.html" class="btn btn-default">次</a></li>
+                <li><a href="index.php" class="btn btn-default">次</a></li>
           </ul>
         </form>
       </div>
@@ -76,7 +76,7 @@
             [<a href="#">Re</a>]
           </p>
           <p class="day">
-            <a href="view.html">
+            <a href="view.php">
               2016-01-28 18:04
             </a>
             [<a href="#" style="color: #00994C;">編集</a>]
@@ -90,7 +90,7 @@
             [<a href="#">Re</a>]
           </p>
           <p class="day">
-            <a href="view.html">
+            <a href="view.php">
               2016-01-28 18:03
             </a>
             [<a href="#" style="color: #00994C;">編集</a>]
@@ -104,7 +104,7 @@
             [<a href="#">Re</a>]
           </p>
           <p class="day">
-            <a href="view.html">
+            <a href="view.php">
               2016-01-28 18:02
             </a>
             [<a href="#" style="color: #00994C;">編集</a>]
@@ -118,7 +118,7 @@
             [<a href="#">Re</a>]
           </p>
           <p class="day">
-            <a href="view.html">
+            <a href="view.php">
               2016-01-28 18:01
             </a>
             [<a href="#" style="color: #00994C;">編集</a>]
