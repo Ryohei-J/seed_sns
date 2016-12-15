@@ -1,23 +1,45 @@
-<?php
+  <?php
 
-// 入力チェック
-$error_nickname = '';
-$error_email = '';
-$error_password = '';
+  // セッションを使うページに必ず入れる
+  session_start();
 
-if (isset($_POST) && !empty($_POST)) {
-  if (empty($_POST['nick_name'])){
-    $error_nickname = 'ニックネームを入力してください';
-  }
-  if (empty($_POST['email'])){
-    $error_email = 'メールアドレスを入力してください';
-  }
-  if (empty($_POST['password'])){
-    $error_password = 'パスワードを入力してください';
-  }
-}
+  // エラー情報を保持する
+  $error = array();
 
-?>
+  if (isset($_POST) && !empty($_POST)) {
+
+    // ニックネームが未入力の場合
+    if (empty($_POST['nick_name'])){
+      $error['nick_name'] = 'blank';
+      // $error_nickname = 'ニックネームを入力してください';
+    }
+
+    // メールアドレスが未入力の場合
+    if (empty($_POST['email'])){
+      $error['email'] = 'blank';
+      // $error_email = 'メールアドレスを入力してください';
+    }
+
+    // パスワードが未入力の場合
+    if (empty($_POST['password'])){
+      $error['password'] = 'blank';
+      // $error_password = 'パスワードを入力してください';
+    }elseif(strlen($_POST['password']) < 4){
+      // パスワードが4文字より少ない
+      $error['password'] = 'length';
+    }
+
+    // エラーがない場合
+    if (empty($error)) {
+      // セッションに値を保存
+      $_SESSION['join'] = $_POST;
+      // check.phpへ移動
+      header('Location:check.php');
+      exit();
+    }
+  }
+
+  ?>
 
 <!DOCTYPE html>
 <html lang="ja">
@@ -78,25 +100,45 @@ if (isset($_POST) && !empty($_POST)) {
           <div class="form-group">
             <label class="col-sm-4 control-label">ニックネーム</label>
             <div class="col-sm-8">
+            <?php if (isset($_POST['nick_name'])) { ?>
+              <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun" value="<?php echo $_POST['nick_name']; ?>">
+            <?php } else { ?>
               <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun">
+            <?php } ?>
+            <?php if(isset($error['nick_name']) && $error['nick_name'] =='blank'): ?>
+              <p class="error">* ニックネームを入力してください。</p>
+            <?php endif; ?>
             </div>
-            <?php echo $error_nickname; ?>
           </div>
           <!-- メールアドレス -->
           <div class="form-group">
             <label class="col-sm-4 control-label">メールアドレス</label>
             <div class="col-sm-8">
+            <?php if (isset($_POST['email'])) { ?>
+              <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com" value="<?php echo $_POST['email']; ?>">
+            <?php } else { ?>
               <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com">
+            <?php } ?>
+            <?php if(isset($error['email']) && $error['email'] =='blank'): ?>
+              <p class="error">* メールアドレスを入力してください。</p>
+            <?php endif; ?>
             </div>
-            <?php echo $error_email; ?>
           </div>
           <!-- パスワード -->
           <div class="form-group">
             <label class="col-sm-4 control-label">パスワード</label>
             <div class="col-sm-8">
+            <?php if (isset($_POST['password'])) { ?>
+              <input type="password" name="password" class="form-control" placeholder="" value="<?php echo $_POST['password']; ?>">
+            <?php } else { ?>
               <input type="password" name="password" class="form-control" placeholder="">
+            <?php } ?>
+            <?php if(isset($error['password']) && $error['password'] =='blank'){ ?>
+              <p class="error">* パスワードを入力してください。</p>
+            <?php }elseif(isset($error['password']) && $error['password'] =='length'){ ?>
+              <p class="error">* パスワードは4文字以上で入力してください。</p>
+            <?php } ?>
             </div>
-            <?php echo $error_password; ?>
           </div>
           <!-- プロフィール写真 -->
           <div class="form-group">
