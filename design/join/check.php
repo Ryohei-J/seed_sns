@@ -1,6 +1,13 @@
 <?php
 
+    // セッションを使うページに必ず入れる
     session_start();
+
+    if (!isset($_SESSION['join'])) {
+      header('Location:index.php');
+      exit();
+    }
+
 
 ?>
 

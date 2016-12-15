@@ -5,19 +5,15 @@
 
   // エラー情報を保持する
   $error = array();
-
   if (isset($_POST) && !empty($_POST)) {
-
     // ニックネームが未入力の場合
     if (empty($_POST['nick_name'])){
       $error['nick_name'] = 'blank';
     }
-
     // メールアドレスが未入力の場合
     if (empty($_POST['email'])){
       $error['email'] = 'blank';
     }
-
     // パスワードが未入力の場合
     if (empty($_POST['password'])){
       $error['password'] = 'blank';
@@ -25,27 +21,23 @@
       // パスワードが4文字より少ない場合
       $error['password'] = 'length';
     }
-
     // アップロードされた画像の拡張子が不適切な場合
     $filename = $_FILES['picture_path']['name'];
     if (!empty($filename)) {
       $ext = substr($filename, -3);
-      if ($ext != 'jpg' && $ext != 'gif') {
+      if ($ext != 'jpg' && $ext != 'gif' && $ext != 'png') {
         $error['picture_path'] = 'type';
       }
     }
 
     // エラーがない場合
     if (empty($error)) {
-
-      // $image = date('YmdHis') . $_FILES['picture_path']['name'];
-      // move_uploaded_file($_FILES['picture_path']['tmp_name'], '../member_pictur/' . $image);
-
+      // 画像をアップロード
+      $image = date('YmdHis') . $_FILES['picture_path']['name'];
+      move_uploaded_file($_FILES['picture_path']['tmp_name'], '../member_picture/' . $image);
       // セッションに値を保存
       $_SESSION['join'] = $_POST;
-
-      // $_SESSION['join']['picture_path'] = $image;
-
+      $_SESSION['join']['picture_path'] = $image;
       // check.phpへ移動
       header('Location:check.php');
       exit();
@@ -113,44 +105,44 @@
           <div class="form-group">
             <label class="col-sm-4 control-label">ニックネーム</label>
             <div class="col-sm-8">
-            <?php if (isset($_POST['nick_name'])) { ?>
-              <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun" value="<?php echo $_POST['nick_name']; ?>">
-            <?php } else { ?>
-              <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun">
-            <?php } ?>
-            <?php if(isset($error['nick_name']) && $error['nick_name'] == 'blank'): ?>
-              <p class="error">* ニックネームを入力してください。</p>
-            <?php endif; ?>
+              <?php if (isset($_POST['nick_name'])) { ?>
+                <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun" value="<?php echo $_POST['nick_name']; ?>">
+              <?php } else { ?>
+                <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun">
+              <?php } ?>
+              <?php if(isset($error['nick_name']) && $error['nick_name'] == 'blank'): ?>
+                <p class="error">* ニックネームを入力してください。</p>
+              <?php endif; ?>
             </div>
           </div>
           <!-- メールアドレス -->
           <div class="form-group">
             <label class="col-sm-4 control-label">メールアドレス</label>
             <div class="col-sm-8">
-            <?php if (isset($_POST['email'])) { ?>
-              <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com" value="<?php echo $_POST['email']; ?>">
-            <?php } else { ?>
-              <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com">
-            <?php } ?>
-            <?php if(isset($error['email']) && $error['email'] == 'blank'): ?>
-              <p class="error">* メールアドレスを入力してください。</p>
-            <?php endif; ?>
+              <?php if (isset($_POST['email'])) { ?>
+                <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com" value="<?php echo $_POST['email']; ?>">
+              <?php } else { ?>
+                <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com">
+              <?php } ?>
+              <?php if(isset($error['email']) && $error['email'] == 'blank'): ?>
+                <p class="error">* メールアドレスを入力してください。</p>
+              <?php endif; ?>
             </div>
           </div>
           <!-- パスワード -->
           <div class="form-group">
             <label class="col-sm-4 control-label">パスワード</label>
             <div class="col-sm-8">
-            <?php if (isset($_POST['password'])) { ?>
-              <input type="password" name="password" class="form-control" placeholder="" value="<?php echo $_POST['password']; ?>">
-            <?php } else { ?>
-              <input type="password" name="password" class="form-control" placeholder="">
-            <?php } ?>
-            <?php if (isset($error['password']) && $error['password'] == 'blank'){ ?>
-              <p class="error">* パスワードを入力してください。</p>
-            <?php }elseif(isset($error['password']) && $error['password'] == 'length'){ ?>
-              <p class="error">* パスワードは4文字以上で入力してください。</p>
-            <?php } ?>
+              <?php if (isset($_POST['password'])) { ?>
+                <input type="password" name="password" class="form-control" placeholder="" value="<?php echo $_POST['password']; ?>">
+              <?php } else { ?>
+                <input type="password" name="password" class="form-control" placeholder="">
+              <?php } ?>
+              <?php if (isset($error['password']) && $error['password'] == 'blank'){ ?>
+                <p class="error">* パスワードを入力してください。</p>
+              <?php }elseif(isset($error['password']) && $error['password'] == 'length'){ ?>
+                <p class="error">* パスワードは4文字以上で入力してください。</p>
+              <?php } ?>
             </div>
           </div>
           <!-- プロフィール写真 -->
@@ -158,9 +150,12 @@
             <label class="col-sm-4 control-label">プロフィール写真</label>
             <div class="col-sm-8">
               <input type="file" name="picture_path" class="form-control">
-            <?php if (isset($error['picture_path']) && $error['picture_path'] == 'type'): ?>
-              <p class="error">* 画像は｢.jpg｣または｢.gif｣を指定してください。</p>
-            <?php endif; ?>
+                <?php if (isset($error['picture_path']) && $error['picture_path'] == 'type'): ?>
+                  <p class="error">* 画像は｢.jpg｣、｢.gif｣または｢.png｣を指定してください。</p>
+                <?php endif; ?>
+                <?php if (!empty($error)): ?>
+                  <p class='error'>* 恐れ入りますが、画像を改めて指定してください。</p>
+                <?php endif; ?>
             </div>
           </div>
 
