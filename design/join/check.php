@@ -1,5 +1,7 @@
 <?php
 
+    session_start();
+
 ?>
 
 <!DOCTYPE html>
@@ -63,11 +65,11 @@
                 <!-- 登録内容を表示 -->
                 <tr>
                   <td><div class="text-center">ニックネーム</div></td>
-                  <td><div class="text-center"><?php echo $_POST['nick_name'] ?></div></td>
+                  <td><div class="text-center"><?php echo htmlspecialchars($_SESSION['join']['nick_name'], ENT_QUOTES, 'UTF-8') ?></div></td>
                 </tr>
                 <tr>
                   <td><div class="text-center">メールアドレス</div></td>
-                  <td><div class="text-center"><?php echo $_POST['email'] ?></div></td>
+                  <td><div class="text-center"><?php echo htmlspecialchars($_SESSION['join']['email'], ENT_QUOTES, 'UTF-8') ?></div></td>
                 </tr>
                 <tr>
                   <td><div class="text-center">パスワード</div></td>
