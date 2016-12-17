@@ -1,6 +1,5 @@
-  <?php
-
-  // セッションを使うページに必ず入れる
+ <?php
+  //セッションを使うページに必ず入れる
   session_start();
 
   // エラー情報を保持する
@@ -29,7 +28,6 @@
         $error['picture_path'] = 'type';
       }
     }
-
     // エラーがない場合
     if (empty($error)) {
       // 画像をアップロード
@@ -43,6 +41,13 @@
       exit();
     }
   }
+
+  //書き直し
+  if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'rewrite') {
+     $_POST = $_SESSION['join'];
+     //画像の再選択エラーメッセージを表示するために必要
+      $error['rewrite'] = true;
+   }
 
   ?>
 
