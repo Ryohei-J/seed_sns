@@ -13,10 +13,12 @@
 
     //データベースへの登録
     if (!empty($_POST)) {
-      $sql = sprintf('INSERT INTO members SET nick_name = "%s", email = "%s", password = "%s", picture_path = "%s", created = "%s"',
-             mysqli_real_escape_string($db, $_SESSION['join']['nick_name']), mysqli_real_escape_string($db, $_SESSION['join']['email']),
-             mysqli_real_escape_string($db, $_SESSION['join']['password']), mysqli_real_escape_string($db, $_SESSION['join']['picture_path']),
-             date('Y-m-d H:i:s'));
+      $sql = sprintf('INSERT INTO members SET nick_name = "%s", email = "%s", password = "%s", picture_path = "%s", created = now()',
+             mysqli_real_escape_string($db, $_SESSION['join']['nick_name']),
+             mysqli_real_escape_string($db, $_SESSION['join']['email']),
+             mysqli_real_escape_string($db, sha1($_SESSION['join']['password'])),
+             mysqli_real_escape_string($db, $_SESSION['join']['picture_path'])
+             );
     mysqli_query($db, $sql) or die(mysqli_error($db));
     unset($_SESSION['join']);
 

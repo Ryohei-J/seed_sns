@@ -2,6 +2,8 @@
   //セッションを使うページに必ず入れる
   session_start();
 
+  require('../dbconnect.php');
+
   // エラー情報を保持する
   $error = array();
   if (isset($_POST) && !empty($_POST)) {
@@ -20,7 +22,7 @@
       // パスワードが4文字より少ない場合
       $error['password'] = 'length';
     }
-    // アップロードされた画像の拡張子が不適切な場合
+    // 画像ファイルの拡張子チェック
     $filename = $_FILES['picture_path']['name'];
     if (!empty($filename)) {
       $ext = substr($filename, -3);
@@ -28,6 +30,17 @@
         $error['picture_path'] = 'type';
       }
     }
+
+    // 重複アカウントのチェック
+    if(empty($error)){
+      $sql = sprintf('SELECT COUNT(*) AS cnt FROM members WHERE email = "%s"', mysqli_real_escape_string($db, $_POST['email']));
+      $record = mysqli_query($db, $sql) or die(mysqli_error($db));
+      $table = mysqli_fetch_assoc($record);
+      if($table['cnt'] > 0){
+        $error['email'] = 'duplicate';
+      }
+    }
+
     // エラーがない場合
     if (empty($error)) {
       // 画像をアップロード
@@ -115,9 +128,9 @@
               <?php } else { ?>
                 <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun">
               <?php } ?>
-              <?php if(isset($error['nick_name']) && $error['nick_name'] == 'blank'): ?>
+              <?php if(isset($error['nick_name']) && $error['nick_name'] == 'blank'){ ?>
                 <p class="error">* ニックネームを入力してください。</p>
-              <?php endif; ?>
+              <?php } ?>
             </div>
           </div>
           <!-- メールアドレス -->
@@ -129,9 +142,12 @@
               <?php } else { ?>
                 <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com">
               <?php } ?>
-              <?php if(isset($error['email']) && $error['email'] == 'blank'): ?>
+              <?php if(isset($error['email']) && $error['email'] == 'blank'){ ?>
                 <p class="error">* メールアドレスを入力してください。</p>
-              <?php endif; ?>
+              <?php } ?>
+              <?php if(isset($error['email']) && $error['email'] == 'duplicate'){ ?>
+                <p class='error'>* 指定されたメールアドレスはすでに登録されています</p>
+              <?php } ?>
             </div>
           </div>
           <!-- パスワード -->
@@ -155,12 +171,12 @@
             <label class="col-sm-4 control-label">プロフィール写真</label>
             <div class="col-sm-8">
               <input type="file" name="picture_path" class="form-control">
-                <?php if (isset($error['picture_path']) && $error['picture_path'] == 'type'): ?>
+                <?php if (isset($error['picture_path']) && $error['picture_path'] == 'type'){ ?>
                   <p class="error">* 画像は｢.jpg｣、｢.gif｣または｢.png｣を指定してください。</p>
-                <?php endif; ?>
-                <?php if (!empty($error)): ?>
+                <?php } ?>
+                <?php if (!empty($error)){ ?>
                   <p class='error'>* 恐れ入りますが、画像を改めて指定してください。</p>
-                <?php endif; ?>
+                <?php } ?>
             </div>
           </div>
 
