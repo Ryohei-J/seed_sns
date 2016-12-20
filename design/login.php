@@ -3,9 +3,9 @@ session_start();
 
 require('dbconnect.php');
 
-if (isset($_COOCKIES) && $_COOCKIES['email'] != '') {
-  $_POST['email'] = $_COOCKIES['email'];
-  $_POST['password'] = $_COOCKIES['password'];
+if (isset($_COOKIE['email']) && $_COOKIE['email'] != '') {
+  $_POST['email'] = $_COOKIE['email'];
+  $_POST['password'] = $_COOKIE['password'];
   $_POST['save'] = 'on';
 }
 
@@ -17,11 +17,12 @@ if(!empty($_POST)){
                   mysqli_real_escape_string($db, sha1($_POST['password']))
     );
     $record = mysqli_query($db, $sql) or die(mysqli_error($db));
+    // $table = false (データが何も取得できなかった場合、elseに飛ぶ)
     if ($table = mysqli_fetch_assoc($record)) {
       // ログイン成功
-      $_SESSION['id'] = $table['id'];
+      $_SESSION['id'] = $table['member_id'];
       $_SESSION['time'] = time();
-      // ログイン情報を記録する
+      // ログイン情報を記録(cookie)
       if ($_POST['save'] == 'on') {
         setcookie('email', $_POST['email'], time()+60*60*24*14);
         setcookie('password', $_POST['password'], time()+60*60*24*14);
@@ -29,6 +30,7 @@ if(!empty($_POST)){
       header('Location:index.php');
       exit();
     } else {
+      // ログイン失敗
       $error['login'] = 'failed';
     }
   } else {
@@ -123,6 +125,7 @@ if(!empty($_POST)){
             <?php } ?>
             </div>
           </div>
+          <!-- 自動ログイン -->
           <div class="form-group">
             <label class="col-sm-4 control-label"></label>
             <div class="col-sm-8">
