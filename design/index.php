@@ -15,6 +15,26 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
   exit();
 }
 
+  // ツイートをデータベースに登録する
+  if (!empty($_POST)) {
+    if ($_POST['tweet'] != '') {
+      $sql = sprintf('INSERT INTO tweets SET tweet = "%s", member_id = %d, reply_tweet_id = %d, created = NOW()',
+             mysqli_real_escape_string($db, $_POST['tweet']),
+             mysqli_real_escape_string($db, $member['member_id']),
+             mysqli_real_escape_string($db, $_POST['reply_tweet_id'])
+      );
+      mysqli_query($db, $sql) or die(mysqli_error($db));
+
+      header('Location:index.php');
+      exit();
+    }
+  }
+
+  // ツイートをデータベースから取得する
+  $sql = sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
+                  WHERE `members`.`member_id` = `tweets`.`member_id` ORDER BY `tweets`.`created` DESC');
+  $posts = mysqli_query($db, $sql) or die(mysqli_error($db));
+
 ?>
 
 <!DOCTYPE html>
@@ -88,62 +108,26 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
       </div>
 
       <div class="col-md-8 content-margin-top">
+        <?php while ($post = mysqli_fetch_assoc($posts)) { ?>
         <div class="msg">
-          <img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="48" height="48">
+          <!-- プロフィール写真 -->
+          <img src="member_picture/<?php echo htmlspecialchars($post['picture_path'], ENT_QUOTES, 'UTF-8'); ?>" width="48" height="48">
           <p>
-            つぶやき４<span class="name"> (Seed kun) </span>
+            <!-- ツイート内容 -->
+            <?php echo htmlspecialchars($post['tweet'], ENT_QUOTES, 'UTF-8'); ?>
+            <!-- ニックネーム -->
+            <span class="name"> (<?php echo htmlspecialchars($post['nick_name'], ENT_QUOTES, 'UTF-8') ?>) </span>
             [<a href="#">Re</a>]
           </p>
           <p class="day">
             <a href="view.php">
-              2016-01-28 18:04
+              <?php echo htmlspecialchars($post['created'], ENT_QUOTES, 'UTF-8'); ?>
             </a>
             [<a href="#" style="color: #00994C;">編集</a>]
             [<a href="#" style="color: #F33;">削除</a>]
           </p>
         </div>
-        <div class="msg">
-          <img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="48" height="48">
-          <p>
-            つぶやき３<span class="name"> (Seed kun) </span>
-            [<a href="#">Re</a>]
-          </p>
-          <p class="day">
-            <a href="view.php">
-              2016-01-28 18:03
-            </a>
-            [<a href="#" style="color: #00994C;">編集</a>]
-            [<a href="#" style="color: #F33;">削除</a>]
-          </p>
-        </div>
-        <div class="msg">
-          <img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="48" height="48">
-          <p>
-            つぶやき２<span class="name"> (Seed kun) </span>
-            [<a href="#">Re</a>]
-          </p>
-          <p class="day">
-            <a href="view.php">
-              2016-01-28 18:02
-            </a>
-            [<a href="#" style="color: #00994C;">編集</a>]
-            [<a href="#" style="color: #F33;">削除</a>]
-          </p>
-        </div>
-        <div class="msg">
-          <img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="48" height="48">
-          <p>
-            つぶやき１<span class="name"> (Seed kun) </span>
-            [<a href="#">Re</a>]
-          </p>
-          <p class="day">
-            <a href="view.php">
-              2016-01-28 18:01
-            </a>
-            [<a href="#" style="color: #00994C;">編集</a>]
-            [<a href="#" style="color: #F33;">削除</a>]
-          </p>
-        </div>
+        <?php } ?>
       </div>
 
     </div>
