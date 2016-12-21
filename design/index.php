@@ -123,8 +123,10 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
             <a href="view.php">
               <?php echo htmlspecialchars($post['created'], ENT_QUOTES, 'UTF-8'); ?>
             </a>
-            [<a href="#" style="color: #00994C;">編集</a>]
-            [<a href="#" style="color: #F33;">削除</a>]
+            [<a ="#" style="color: #00994C;">編集</a>]
+            <?php if ($_SESSION['id'] == $post['member_id']) { ?>
+              [<a href="delete.php?id=<?php echo htmlspecialchars($post['id']); ?>" style="color: #F33;">削除</a>]
+            <?php } ?>
           </p>
         </div>
         <?php } ?>
