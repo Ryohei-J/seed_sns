@@ -125,7 +125,7 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
             </a>
             [<a ="#" style="color: #00994C;">編集</a>]
             <?php if ($_SESSION['id'] == $post['member_id']) { ?>
-              [<a href="delete.php?id=<?php echo htmlspecialchars($post['id']); ?>" style="color: #F33;">削除</a>]
+              [<a href="delete.php?id=<?php echo htmlspecialchars($post['tweet_id']); ?>" style="color: #F33;">削除</a>]
             <?php } ?>
           </p>
         </div>
