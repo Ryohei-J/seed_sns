@@ -2,7 +2,7 @@
 
 		session_start();
 
-		// セッション情報を削除
+		// セッション情報に上書きして空にする
 		$_SESSION = array();
 		if (ini_get("session.use_cookies")) {
 			$params = session_get_cookie_params();

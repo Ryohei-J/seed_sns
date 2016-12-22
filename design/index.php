@@ -3,9 +3,14 @@ session_start();
 
 require('dbconnect.php');
 
+// ログインチェック
+  // 1.セッションにidが入っていること
+  // 2.最後の行動から1時間以内であること
 if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
   // ログインしている
+  // セッションの時間を更新
   $_SESSION['time'] = time();
+  // SQLを実行し、ユーザーのデータを取得
   $sql = sprintf('SELECT * FROM members WHERE member_id = %d', mysqli_real_escape_string($db, $_SESSION['id']));
   $record = mysqli_query($db, $sql) or die (mysqli_error($db));
   $member = mysqli_fetch_assoc($record);
@@ -34,6 +39,18 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
   $sql = sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
                   WHERE `members`.`member_id` = `tweets`.`member_id` ORDER BY `tweets`.`created` DESC');
   $posts = mysqli_query($db, $sql) or die(mysqli_error($db));
+
+  // 返信の場合
+  if (isset($_REQUEST['res'])) {
+    $sql=sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
+                  WHERE `members`.`member_id` = `tweets`.`member_id` AND `tweets`.`tweet_id` = %d ORDER BY `tweets`.`created` DESC',
+                  mysqli_real_escape_string($db, $_REQUEST['res'])
+    );
+    $record = mysqli_query($db, $sql) or die (mysqli_error($db));
+    $table = mysqli_fetch_assoc($record);
+    $tweet = '@' . $table['nick_name'] . ' ' . $table['tweet'];
+
+  }
 
 ?>
 
@@ -94,7 +111,12 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
             <div class="form-group">
               <label class="col-sm-4 control-label">つぶやき</label>
               <div class="col-sm-8">
-                <textarea name="tweet" cols="50" rows="5" class="form-control" placeholder="例：Hello World!"></textarea>
+              <?php if (isset($_GET['res']) && !empty($_GET['res'])) { ?>
+                <textarea name="tweet" cols="50" rows="5" class="form-control" placeholder="例：Hello World!" ><?php echo htmlspecialchars($tweet, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                <input type="hidden" name="reply_tweet_id" value="<?php echo htmlspecialchars($_REQUEST['res'], ENT_QUOTES, 'UTF-8'); ?>">
+              <?php } else { ?>
+                <textarea name="tweet" cols="50" rows="5" class="form-control" placeholder="例：Hello World!" ></textarea>
+              <?php } ?>
               </div>
             </div>
           <ul class="paging">
@@ -117,10 +139,10 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
             <?php echo htmlspecialchars($post['tweet'], ENT_QUOTES, 'UTF-8'); ?>
             <!-- ニックネーム -->
             <span class="name"> (<?php echo htmlspecialchars($post['nick_name'], ENT_QUOTES, 'UTF-8') ?>) </span>
-            [<a href="#">Re</a>]
+            [<a href="index.php?res=<?php echo htmlspecialchars($post['tweet_id'], ENT_QUOTES, 'UTF-8'); ?>">Re</a>]
           </p>
           <p class="day">
-            <a href="view.php">
+            <a href="view.php?id=<?php echo htmlspecialchars($post['tweet_id'], ENT_QUOTES, 'UTF-8'); ?>">
               <?php echo htmlspecialchars($post['created'], ENT_QUOTES, 'UTF-8'); ?>
             </a>
             [<a ="#" style="color: #00994C;">編集</a>]
