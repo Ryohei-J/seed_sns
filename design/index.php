@@ -49,8 +49,17 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
     $record = mysqli_query($db, $sql) or die (mysqli_error($db));
     $table = mysqli_fetch_assoc($record);
     $tweet = '@' . $table['nick_name'] . ' ' . $table['tweet'];
+    }
 
-  }
+  // htmlspecialcharsのショートカット
+    function h($value){
+      return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    }
+
+  // 本文内のURLにリンクを設定します
+    function makeLink($value){
+      return mb_ereg_replace("(https?)(://[[:alnum:]¥+¥$\;¥?¥.%,!#~*/:@&=_-]+)", '<a href="\1\2">\1\2</a>' , $value);
+    }
 
 ?>
 
@@ -136,15 +145,20 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
           <img src="member_picture/<?php echo htmlspecialchars($post['picture_path'], ENT_QUOTES, 'UTF-8'); ?>" width="48" height="48">
           <p>
             <!-- ツイート内容 -->
-            <?php echo htmlspecialchars($post['tweet'], ENT_QUOTES, 'UTF-8'); ?>
+            <?php echo makeLink(h($post['tweet'])); ?>
             <!-- ニックネーム -->
-            <span class="name"> (<?php echo htmlspecialchars($post['nick_name'], ENT_QUOTES, 'UTF-8') ?>) </span>
+            <span class="name"> (<?php echo htmlspecialchars($post['nick_name'], ENT_QUOTES, 'UTF-8'); ?>) </span>
             [<a href="index.php?res=<?php echo htmlspecialchars($post['tweet_id'], ENT_QUOTES, 'UTF-8'); ?>">Re</a>]
           </p>
           <p class="day">
             <a href="view.php?id=<?php echo htmlspecialchars($post['tweet_id'], ENT_QUOTES, 'UTF-8'); ?>">
               <?php echo htmlspecialchars($post['created'], ENT_QUOTES, 'UTF-8'); ?>
             </a>
+            <?php if ($post['reply_tweet_id'] > 0) { ?>
+              <a href="view.php?id=<?php echo htmlspecialchars($post['reply_tweet_id'], ENT_QUOTES, 'UTF-8'); ?>">
+                返信元のメッセージ
+              </a>
+            <?php } ?>
             [<a ="#" style="color: #00994C;">編集</a>]
             <?php if ($_SESSION['id'] == $post['member_id']) { ?>
               [<a href="delete.php?id=<?php echo htmlspecialchars($post['tweet_id']); ?>" style="color: #F33;">削除</a>]
