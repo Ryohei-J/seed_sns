@@ -35,13 +35,13 @@ if (!empty($_POST)) {
   }
 }
 
+// ページング
 // 投稿を取得する
 if (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) {
   $page = $_REQUEST['page'];
 } else {
   $page = 1;
 }
-
 // 最終ページを取得する
 $sql = 'SELECT COUNT(*) AS cnt FROM tweets';
 $recordSet = mysqli_query($db, $sql);
@@ -145,13 +145,28 @@ function makeLink($value){
               <?php } ?>
               </div>
             </div>
-          <ul class="paging">
-            <input type="submit" class="btn btn-info" value="つぶやく">
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <li><a href="index.php" class="btn btn-default">前</a></li>
-                &nbsp;&nbsp;|&nbsp;&nbsp;
-                <li><a href="index.php" class="btn btn-default">次</a></li>
-          </ul>
+            <ul class="paging">
+              <!-- ツイートボタン -->
+              <input type="submit" class="btn btn-info" value="つぶやく">
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <!-- ページング -->
+              <?php if ($page > 1) { ?>
+                <li><a href="index.php?page=<?php echo($page - 1); ?>" class="btn btn-default">前</a></li>
+              <?php } else { ?>
+                <li><a class="btn btn-default">前</a></li>
+              <?php } ?>
+              &nbsp;&nbsp;|&nbsp;&nbsp;
+              <?php if ($page < $maxPage) { ?>
+                <li><a href="index.php?page=<?php echo($page + 1); ?>" class="btn btn-default">次</a></li>
+              <?php } else { ?>
+                <li><a class="btn btn-default">次</a></li>
+              <?php } ?>
+            </ul>
+        </form>
+        <!-- 検索フォーム -->
+        <form method="" action="search.php">
+          <input type="search" name="search_word" placeholder="キーワード検索">
+          <input type="submit" name="submit" value="検索">
         </form>
       </div>
 
@@ -183,19 +198,6 @@ function makeLink($value){
             </p>
           </div>
         <?php } ?>
-        <!-- ページング -->
-        <ul class="paging">
-          <?php if ($page > 1) { ?>
-            <li><a href="index.php?page=<?php echo($page - 1); ?>">前のページへ</a></li>
-          <?php } else { ?>
-            <li>前のページへ</li>
-          <?php } ?>
-          <?php if ($page < $maxPage) { ?>
-            <li><a href="index.php?page=<?php echo($page + 1); ?>">次のページへ</a></li>
-          <?php } else { ?>
-            <li>次のページへ</li>
-          <?php } ?>
-        </ul>
       </div>
     </div>
   </div>
