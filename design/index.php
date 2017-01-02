@@ -20,46 +20,63 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
   exit();
 }
 
-  // ツイートをデータベースに登録する
-  if (!empty($_POST)) {
-    if ($_POST['tweet'] != '') {
-      $sql = sprintf('INSERT INTO tweets SET tweet = "%s", member_id = %d, reply_tweet_id = %d, created = NOW()',
-             mysqli_real_escape_string($db, $_POST['tweet']),
-             mysqli_real_escape_string($db, $member['member_id']),
-             mysqli_real_escape_string($db, $_POST['reply_tweet_id'])
-      );
-      mysqli_query($db, $sql) or die(mysqli_error($db));
+// ツイートをデータベースに登録する
+if (!empty($_POST)) {
+  if ($_POST['tweet'] != '') {
+    $sql = sprintf('INSERT INTO tweets SET tweet = "%s", member_id = %d, reply_tweet_id = %d, created = NOW()',
+           mysqli_real_escape_string($db, $_POST['tweet']),
+           mysqli_real_escape_string($db, $member['member_id']),
+           $_POST['reply_tweet_id']
+    );
+    mysqli_query($db, $sql) or die(mysqli_error($db));
 
-      header('Location:index.php');
-      exit();
-    }
+    header('Location:index.php');
+    exit();
+  }
+}
+
+// 投稿を取得する
+if (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) {
+  $page = $_REQUEST['page'];
+} else {
+  $page = 1;
+}
+
+// 最終ページを取得する
+$sql = 'SELECT COUNT(*) AS cnt FROM tweets';
+$recordSet = mysqli_query($db, $sql);
+$table = mysqli_fetch_assoc($recordSet);
+$maxPage = ceil($table['cnt'] / 5);
+$page = min($page, $maxPage);
+
+$start = ($page - 1) * 5;
+$start = max(0, $start);
+
+// ツイートをデータベースから取得する
+$sql = sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
+                WHERE `members`.`member_id` = `tweets`.`member_id` ORDER BY `tweets`.`created` DESC LIMIT %d, 5', $start);
+$tweets = mysqli_query($db, $sql) or die(mysqli_error($db));
+
+// 返信の場合
+if (isset($_REQUEST['res'])) {
+  $sql=sprintf('SELECT `members`.`nick_name`, `tweets`.* FROM `members`, `tweets` WHERE `members`.`member_id` = `tweets`.`member_id`
+                AND `tweets`.`tweet_id` = %d ORDER BY `tweets`.`created` DESC',
+                mysqli_real_escape_string($db, $_REQUEST['res'])
+  );
+  $record = mysqli_query($db, $sql) or die (mysqli_error($db));
+  $table = mysqli_fetch_assoc($record);
+  $tweet = '@' . $table['nick_name'] . ' ' . $table['tweet'];
   }
 
-  // ツイートをデータベースから取得する
-  $sql = sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
-                  WHERE `members`.`member_id` = `tweets`.`member_id` ORDER BY `tweets`.`created` DESC');
-  $posts = mysqli_query($db, $sql) or die(mysqli_error($db));
+// htmlspecialcharsのショートカット
+function h($value){
+  return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
 
-  // 返信の場合
-  if (isset($_REQUEST['res'])) {
-    $sql=sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
-                  WHERE `members`.`member_id` = `tweets`.`member_id` AND `tweets`.`tweet_id` = %d ORDER BY `tweets`.`created` DESC',
-                  mysqli_real_escape_string($db, $_REQUEST['res'])
-    );
-    $record = mysqli_query($db, $sql) or die (mysqli_error($db));
-    $table = mysqli_fetch_assoc($record);
-    $tweet = '@' . $table['nick_name'] . ' ' . $table['tweet'];
-    }
-
-  // htmlspecialcharsのショートカット
-    function h($value){
-      return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-    }
-
-  // 本文内のURLにリンクを設定します
-    function makeLink($value){
-      return mb_ereg_replace("(https?)(://[[:alnum:]¥+¥$\;¥?¥.%,!#~*/:@&=_-]+)", '<a href="\1\2">\1\2</a>' , $value);
-    }
+// 本文内のURLにリンクを設定
+function makeLink($value){
+  return mb_ereg_replace("(https?)(://[[:alnum:]¥+¥$\;¥?¥.%,!#~*/:@&=_-]+)", '<a href="\1\2">\1\2</a>' , $value);
+}
 
 ?>
 
@@ -120,7 +137,7 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
             <div class="form-group">
               <label class="col-sm-4 control-label">つぶやき</label>
               <div class="col-sm-8">
-              <?php if (isset($_GET['res']) && !empty($_GET['res'])) { ?>
+              <?php if (isset($tweet)) { ?>
                 <textarea name="tweet" cols="50" rows="5" class="form-control" placeholder="例：Hello World!" ><?php echo htmlspecialchars($tweet, ENT_QUOTES, 'UTF-8'); ?></textarea>
                 <input type="hidden" name="reply_tweet_id" value="<?php echo htmlspecialchars($_REQUEST['res'], ENT_QUOTES, 'UTF-8'); ?>">
               <?php } else { ?>
@@ -139,35 +156,47 @@ if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
       </div>
 
       <div class="col-md-8 content-margin-top">
-        <?php while ($post = mysqli_fetch_assoc($posts)) { ?>
-        <div class="msg">
-          <!-- プロフィール写真 -->
-          <img src="member_picture/<?php echo htmlspecialchars($post['picture_path'], ENT_QUOTES, 'UTF-8'); ?>" width="48" height="48">
-          <p>
-            <!-- ツイート内容 -->
-            <?php echo makeLink(h($post['tweet'])); ?>
-            <!-- ニックネーム -->
-            <span class="name"> (<?php echo htmlspecialchars($post['nick_name'], ENT_QUOTES, 'UTF-8'); ?>) </span>
-            [<a href="index.php?res=<?php echo htmlspecialchars($post['tweet_id'], ENT_QUOTES, 'UTF-8'); ?>">Re</a>]
-          </p>
-          <p class="day">
-            <a href="view.php?id=<?php echo htmlspecialchars($post['tweet_id'], ENT_QUOTES, 'UTF-8'); ?>">
-              <?php echo htmlspecialchars($post['created'], ENT_QUOTES, 'UTF-8'); ?>
-            </a>
-            <?php if ($post['reply_tweet_id'] > 0) { ?>
-              <a href="view.php?id=<?php echo htmlspecialchars($post['reply_tweet_id'], ENT_QUOTES, 'UTF-8'); ?>">
-                返信元のメッセージ
+        <?php while ($tweet = mysqli_fetch_assoc($tweets)) { ?>
+          <div class="msg">
+            <!-- プロフィール写真 -->
+            <img src="member_picture/<?php echo h($tweet['picture_path']); ?>" width="48" height="48">
+            <p>
+              <!-- ツイート内容 -->
+              <?php echo makeLink(h($tweet['tweet'])); ?>
+              <!-- ニックネーム -->
+              <span class="name"> (<?php echo h($tweet['nick_name']); ?>) </span>
+              [<a href="index.php?res=<?php echo h($tweet['tweet_id']); ?>">Re</a>]
+            </p>
+            <p class="day">
+              <a href="view.php?tweet_id=<?php echo h($tweet['tweet_id']); ?>">
+                <?php echo h($tweet['created']); ?>
               </a>
-            <?php } ?>
-            [<a ="#" style="color: #00994C;">編集</a>]
-            <?php if ($_SESSION['id'] == $post['member_id']) { ?>
-              [<a href="delete.php?id=<?php echo htmlspecialchars($post['tweet_id']); ?>" style="color: #F33;">削除</a>]
-            <?php } ?>
-          </p>
-        </div>
+              <?php if ($tweet['reply_tweet_id'] > 0) { ?>
+                <a href="view.php?tweet_id=<?php echo h($tweet['reply_tweet_id']); ?>">
+                  返信元のメッセージ
+                </a>
+              <?php } ?>
+              [<a ="#" style="color: #00994C;">編集</a>]
+              <?php if ($_SESSION['id'] == $tweet['member_id']) { ?>
+                [<a href="delete.php?id=<?php echo h($tweet['tweet_id']); ?>" style="color: #F33;">削除</a>]
+              <?php } ?>
+            </p>
+          </div>
         <?php } ?>
+        <!-- ページング -->
+        <ul class="paging">
+          <?php if ($page > 1) { ?>
+            <li><a href="index.php?page=<?php echo($page - 1); ?>">前のページへ</a></li>
+          <?php } else { ?>
+            <li>前のページへ</li>
+          <?php } ?>
+          <?php if ($page < $maxPage) { ?>
+            <li><a href="index.php?page=<?php echo($page + 1); ?>">次のページへ</a></li>
+          <?php } else { ?>
+            <li>次のページへ</li>
+          <?php } ?>
+        </ul>
       </div>
-
     </div>
   </div>
 

@@ -4,7 +4,7 @@ session_start();
 
 require('dbconnect.php');
 
-if (empty($_REQUEST['id'])) {
+if (empty($_REQUEST['tweet_id'])) {
   header('Location:index.php');
   exit();
 }
@@ -12,9 +12,19 @@ if (empty($_REQUEST['id'])) {
 // 投稿を取得する
 $sql = sprintf('SELECT `members`.`nick_name`,`members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
                 WHERE `members`.`member_id` = `tweets`.`member_id` AND `tweets`.`tweet_id` = %d ORDER BY `tweets`.`created` DESC',
-                mysqli_real_escape_string($db, $_REQUEST['id'])
+                mysqli_real_escape_string($db, $_REQUEST['tweet_id'])
 );
-$posts = mysqli_query($db, $sql) or die(mysqli_error($db));
+$tweets = mysqli_query($db, $sql) or die(mysqli_error($db));
+
+// htmlspecialcharsのショートカット
+  function h($value){
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+  }
+
+// 本文内のURLにリンクを設定します
+  function makeLink($value){
+    return mb_ereg_replace("(https?)(://[[:alnum:]¥+¥$\;¥?¥.%,!#~*/:@&=_-]+)", '<a href="\1\2">\1\2</a>' , $value);
+  }
 
 ?>
 
@@ -69,18 +79,21 @@ $posts = mysqli_query($db, $sql) or die(mysqli_error($db));
   <div class="container">
     <div class="row">
       <div class="col-md-4 col-md-offset-4 content-margin-top">
-        <?php if ($post = mysqli_fetch_assoc($posts)) { ?>
+        <?php if ($tweet = mysqli_fetch_assoc($tweets)) { ?>
           <div class="msg">
-            <img src="member_picture/<?php echo htmlspecialchars($post['picture_path'], ENT_QUOTES, 'UTF-8'); ?>" width="100" height="100">
-            <p>投稿者 : <span class="name"> <?php echo htmlspecialchars($post['nick_name'], ENT_QUOTES, 'UTF-8') ?> </span></p>
+            <!-- プロフィール写真 -->
+            <img src="member_picture/<?php echo htmlspecialchars($tweet['picture_path'], ENT_QUOTES, 'UTF-8'); ?>" width="100" height="100">
+            <!-- ニックネーム -->
+            <p>投稿者 : <span class="name"> <?php echo htmlspecialchars($tweet['nick_name'], ENT_QUOTES, 'UTF-8') ?> </span></p>
+            <!-- ツイート内容 -->
             <p>
               つぶやき : <br>
-              <?php echo htmlspecialchars($post['tweet'], ENT_QUOTES, 'UTF-8'); ?>
+              <?php echo makeLink(h($tweet['tweet'])); ?>
             </p>
             <p class="day delete">
-              <?php echo htmlspecialchars($post['created'], ENT_QUOTES, 'UTF-8'); ?>
-              <?php if ($_SESSION['id'] == $post['member_id']) { ?>
-                [<a href="delete.php?id=<?php echo htmlspecialchars($post['tweet_id']); ?>" style="color: #F33;">削除</a>]
+              <?php echo htmlspecialchars($tweet['created'], ENT_QUOTES, 'UTF-8'); ?>
+              <?php if ($_SESSION['id'] == $tweet['member_id']) { ?>
+                [<a href="delete.php?id=<?php echo htmlspecialchars($tweet['tweet_id']); ?>" style="color: #F33;">削除</a>]
               <?php } ?>
             </p>
           </div>
