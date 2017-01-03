@@ -68,6 +68,15 @@ if (isset($_REQUEST['res'])) {
   $tweet = '@' . $table['nick_name'] . ' ' . $table['tweet'];
   }
 
+// 検索機能
+if (isset($_REQUEST['search_word'])) {
+$sql = sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
+                WHERE `members`.`member_id` = `tweets`.`member_id` AND `tweets`.`tweet` = "%s" ORDER BY `tweets`.`created` DESC',
+                mysqli_real_escape_string($db, $_GET['search_word'])
+);
+$searchTweets = mysqli_query($db, $sql) or die(mysqli_error($db));
+}
+
 // htmlspecialcharsのショートカット
 function h($value){
   return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
@@ -164,39 +173,72 @@ function makeLink($value){
             </ul>
         </form>
         <!-- 検索フォーム -->
-        <form method="" action="search.php">
+        <form method="" action="">
           <input type="search" name="search_word" placeholder="キーワード検索">
           <input type="submit" name="submit" value="検索">
         </form>
       </div>
 
       <div class="col-md-8 content-margin-top">
-        <?php while ($tweet = mysqli_fetch_assoc($tweets)) { ?>
-          <div class="msg">
-            <!-- プロフィール写真 -->
-            <img src="member_picture/<?php echo h($tweet['picture_path']); ?>" width="48" height="48">
-            <p>
-              <!-- ツイート内容 -->
-              <?php echo makeLink(h($tweet['tweet'])); ?>
-              <!-- ニックネーム -->
-              <span class="name"> (<?php echo h($tweet['nick_name']); ?>) </span>
-              [<a href="index.php?res=<?php echo h($tweet['tweet_id']); ?>">Re</a>]
-            </p>
-            <p class="day">
-              <a href="view.php?tweet_id=<?php echo h($tweet['tweet_id']); ?>">
-                <?php echo h($tweet['created']); ?>
-              </a>
-              <?php if ($tweet['reply_tweet_id'] > 0) { ?>
-                <a href="view.php?tweet_id=<?php echo h($tweet['reply_tweet_id']); ?>">
-                  返信元のメッセージ
+        <!-- 通常(検索ワードがGET送信されていない場合)は全ツイートを表示する -->
+        <?php if (empty($_GET['search_word'])) { ?>
+          <?php while ($tweet = mysqli_fetch_assoc($tweets)) { ?>
+            <div class="msg">
+              <!-- プロフィール写真 -->
+              <img src="member_picture/<?php echo h($tweet['picture_path']); ?>" width="48" height="48">
+              <p>
+                <!-- ツイート内容 -->
+                <?php echo makeLink(h($tweet['tweet'])); ?>
+                <!-- ニックネーム -->
+                <span class="name"> (<?php echo h($tweet['nick_name']); ?>) </span>
+                [<a href="index.php?res=<?php echo h($tweet['tweet_id']); ?>">Re</a>]
+              </p>
+              <p class="day">
+                <a href="view.php?tweet_id=<?php echo h($tweet['tweet_id']); ?>">
+                  <?php echo h($tweet['created']); ?>
                 </a>
-              <?php } ?>
-              [<a ="#" style="color: #00994C;">編集</a>]
-              <?php if ($_SESSION['id'] == $tweet['member_id']) { ?>
-                [<a href="delete.php?id=<?php echo h($tweet['tweet_id']); ?>" style="color: #F33;">削除</a>]
-              <?php } ?>
-            </p>
-          </div>
+                <?php if ($tweet['reply_tweet_id'] > 0) { ?>
+                  <a href="view.php?tweet_id=<?php echo h($tweet['reply_tweet_id']); ?>">
+                    返信元のメッセージ
+                  </a>
+                <?php } ?>
+                [<a hres="#" style="color: #00994C;">編集</a>]
+                <?php if ($_SESSION['id'] == $tweet['member_id']) { ?>
+                  [<a href="delete.php?id=<?php echo h($tweet['tweet_id']); ?>" style="color: #F33;">削除</a>]
+                <?php } ?>
+              </p>
+            </div>
+          <?php } ?>
+        <?php } else {?>
+        <!-- そうでない(検索ワードがGET送信されている)場合は検索結果を表示する -->
+          <?php while ($searchTweet = mysqli_fetch_assoc($searchTweets)) { ?>
+            <div class="msg">
+              <!-- プロフィール写真 -->
+              <img src="member_picture/<?php echo h($searchTweet['picture_path']); ?>" width="48" height="48">
+              <p>
+                <!-- ツイート内容 -->
+                <?php echo makeLink(h($searchTweet['tweet'])); ?>
+                <!-- ニックネーム -->
+                <span class="name"> (<?php echo h($searchTweet['nick_name']); ?>) </span>
+                [<a href="index.php?res=<?php echo h($searchTweet['tweet_id']); ?>">Re</a>]
+              </p>
+              <p class="day">
+                <a href="view.php?tweet_id=<?php echo h($searchTweet['tweet_id']); ?>">
+                  <?php echo h($searchTweet['created']); ?>
+                </a>
+                <?php if ($searchTweet['reply_tweet_id'] > 0) { ?>
+                  <a href="view.php?tweet_id=<?php echo h($searchTweet['reply_tweet_id']); ?>">
+                    返信元のメッセージ
+                  </a>
+                <?php } ?>
+                [<a hres="#" style="color: #00994C;">編集</a>]
+                <?php if ($_SESSION['id'] == $searchTweet['member_id']) { ?>
+                  [<a href="delete.php?id=<?php echo h($searchTweet['tweet_id']); ?>" style="color: #F33;">削除</a>]
+                <?php } ?>
+              </p>
+            </div>
+          <?php } ?>
+          <a href="index.php">&laquo;&nbsp;一覧へ戻る</a>
         <?php } ?>
       </div>
     </div>
