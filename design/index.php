@@ -36,26 +36,38 @@ if (!empty($_POST)) {
 }
 
 // ページング
-// 投稿を取得する
+// ページ番号の所得と設定
 if (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) {
   $page = $_REQUEST['page'];
 } else {
   $page = 1;
 }
-// 最終ページを取得する
-$sql = 'SELECT COUNT(*) AS cnt FROM tweets';
-$recordSet = mysqli_query($db, $sql);
+// ①表示する正しいページの数値(Min)を設定
+$page = max($page, 1);
+  // max関数：()に指定した複数のデータから、一番大きい値を返す
+  // page=-1と指定された場合、マイナスの値のページ番号は存在しないので、1に強制変換する
+// ②必要なページ数を計算する
+if (isset($_GET['search_word']) && !empty($_GET['search_word'])) {
+  $sql = sprintf('SELECT COUNT(*) AS cnt FROM `tweets` WHERE `tweet` LIKE "%%%s%%"',
+  mysqli_real_escape_string($db, $_GET['search_word']));
+} else {
+  $sql = 'SELECT COUNT(*) AS cnt FROM `tweets`';
+}
+$recordSet = mysqli_query($db, $sql) or die(mysqli_error($db));
 $table = mysqli_fetch_assoc($recordSet);
+  // ceil関数：切り上げる関数
 $maxPage = ceil($table['cnt'] / 5);
+// ③表示する正しいページの数値(Max)を設定
 $page = min($page, $maxPage);
-
+  // min関数：()に指定した複数のデータから、一番小さい値を返す
+  // page=100と指定された場合、ページ番号100のデータは存在しないので、最大ページ数に強制変換する
+// ④ページに表示する件数だけ取得する
 $start = ($page - 1) * 5;
 $start = max(0, $start);
 
 // ツイートをデータベースから取得する
-$sql = sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
-                WHERE `members`.`member_id` = `tweets`.`member_id` ORDER BY `tweets`.`created` DESC LIMIT %d, 5', $start);
-$tweets = mysqli_query($db, $sql) or die(mysqli_error($db));
+
+
 
 // 返信の場合
 if (isset($_REQUEST['res'])) {
@@ -71,11 +83,14 @@ if (isset($_REQUEST['res'])) {
 // 検索機能
 if (isset($_REQUEST['search_word'])) {
 $sql = sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
-                WHERE `members`.`member_id` = `tweets`.`member_id` AND `tweets`.`tweet` = "%s" ORDER BY `tweets`.`created` DESC',
-                mysqli_real_escape_string($db, $_GET['search_word'])
+                WHERE `members`.`member_id` = `tweets`.`member_id` AND `tweets`.`tweet` LIKE "%%%s%%" ORDER BY `tweets`.`created` DESC LIMIT %d, 5',
+                mysqli_real_escape_string($db, $_GET['search_word']), $start
 );
-$searchTweets = mysqli_query($db, $sql) or die(mysqli_error($db));
+} else {
+  $sql = sprintf('SELECT `members`.`nick_name`, `members`.`picture_path`, `tweets`.* FROM `members`, `tweets`
+                  WHERE `members`.`member_id` = `tweets`.`member_id` ORDER BY `tweets`.`created` DESC LIMIT %d, 5', $start);
 }
+$tweets = mysqli_query($db, $sql) or die(mysqli_error($db));
 
 // htmlspecialcharsのショートカット
 function h($value){
@@ -140,7 +155,7 @@ function makeLink($value){
   <div class="container">
     <div class="row">
       <div class="col-md-4 content-margin-top">
-        <legend>ようこそ<?php echo htmlspecialchars($member['nick_name']); ?>さん！</legend>
+        <legend>ようこそ<?php echo h($member['nick_name']); ?>さん！</legend>
         <form method="post" action="" class="form-horizontal" role="form">
             <!-- つぶやき -->
             <div class="form-group">
@@ -158,30 +173,38 @@ function makeLink($value){
               <!-- ツイートボタン -->
               <input type="submit" class="btn btn-info" value="つぶやく">
               &nbsp;&nbsp;&nbsp;&nbsp;
-              <!-- ページング -->
-              <?php if ($page > 1) { ?>
-                <li><a href="index.php?page=<?php echo($page - 1); ?>" class="btn btn-default">前</a></li>
-              <?php } else { ?>
+              <!-- ページング --> <!-- 通常の場合(検索ワードがGET送信されていない場合) -->
+              <?php if (empty($_GET['search_word'])) { ?>
+                <?php if ($page > 1) { ?>
+                  <li><a href="index.php?page=<?php echo($page - 1); ?>" class="btn btn-default">前</a></li>
+                <?php } else { ?>
+                  <li><a class="btn btn-default">前</a></li>
+                <?php } ?>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <?php if ($page < $maxPage) { ?>
+                  <li><a href="index.php?page=<?php echo($page + 1); ?>" class="btn btn-default">次</a></li>
+                <?php } else { ?>
+                  <li><a class="btn btn-default">次</a></li>
+                <?php } ?>
+              <?php } else { ?> <!-- そうでない場合(検索ワードがGET送信されている場合) -->
                 <li><a class="btn btn-default">前</a></li>
-              <?php } ?>
-              &nbsp;&nbsp;|&nbsp;&nbsp;
-              <?php if ($page < $maxPage) { ?>
-                <li><a href="index.php?page=<?php echo($page + 1); ?>" class="btn btn-default">次</a></li>
-              <?php } else { ?>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
                 <li><a class="btn btn-default">次</a></li>
               <?php } ?>
             </ul>
         </form>
-        <!-- 検索フォーム -->
-        <form method="" action="">
-          <input type="search" name="search_word" placeholder="キーワード検索">
-          <input type="submit" name="submit" value="検索">
-        </form>
       </div>
-
       <div class="col-md-8 content-margin-top">
-        <!-- 通常(検索ワードがGET送信されていない場合)は全ツイートを表示する -->
-        <?php if (empty($_GET['search_word'])) { ?>
+        <!-- 検索フォーム -->
+        <form action="" method="get" class="form-horizontal" role="form">
+          <?php if (isset($_GET['search_word']) && !empty($_GET['search_word'])){ ?>
+           <input type="text" name="search_word" value="<?php echo $_GET['search_word']; ?>">
+          <?php } else { ?>
+            <input type="text" name="search_word" value="">
+          <?php } ?>
+          <input type="submit" class="btn btn-success btn-xs" value="検索">
+        </form>
+        <!-- ツイート表示 -->
           <?php while ($tweet = mysqli_fetch_assoc($tweets)) { ?>
             <div class="msg">
               <!-- プロフィール写真 -->
@@ -209,37 +232,6 @@ function makeLink($value){
               </p>
             </div>
           <?php } ?>
-        <?php } else {?>
-        <!-- そうでない(検索ワードがGET送信されている)場合は検索結果を表示する -->
-          <?php while ($searchTweet = mysqli_fetch_assoc($searchTweets)) { ?>
-            <div class="msg">
-              <!-- プロフィール写真 -->
-              <img src="member_picture/<?php echo h($searchTweet['picture_path']); ?>" width="48" height="48">
-              <p>
-                <!-- ツイート内容 -->
-                <?php echo makeLink(h($searchTweet['tweet'])); ?>
-                <!-- ニックネーム -->
-                <span class="name"> (<?php echo h($searchTweet['nick_name']); ?>) </span>
-                [<a href="index.php?res=<?php echo h($searchTweet['tweet_id']); ?>">Re</a>]
-              </p>
-              <p class="day">
-                <a href="view.php?tweet_id=<?php echo h($searchTweet['tweet_id']); ?>">
-                  <?php echo h($searchTweet['created']); ?>
-                </a>
-                <?php if ($searchTweet['reply_tweet_id'] > 0) { ?>
-                  <a href="view.php?tweet_id=<?php echo h($searchTweet['reply_tweet_id']); ?>">
-                    返信元のメッセージ
-                  </a>
-                <?php } ?>
-                [<a hres="#" style="color: #00994C;">編集</a>]
-                <?php if ($_SESSION['id'] == $searchTweet['member_id']) { ?>
-                  [<a href="delete.php?id=<?php echo h($searchTweet['tweet_id']); ?>" style="color: #F33;">削除</a>]
-                <?php } ?>
-              </p>
-            </div>
-          <?php } ?>
-          <a href="index.php">&laquo;&nbsp;一覧へ戻る</a>
-        <?php } ?>
       </div>
     </div>
   </div>

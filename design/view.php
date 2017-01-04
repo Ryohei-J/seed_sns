@@ -82,18 +82,18 @@ $tweets = mysqli_query($db, $sql) or die(mysqli_error($db));
         <?php if ($tweet = mysqli_fetch_assoc($tweets)) { ?>
           <div class="msg">
             <!-- プロフィール写真 -->
-            <img src="member_picture/<?php echo htmlspecialchars($tweet['picture_path'], ENT_QUOTES, 'UTF-8'); ?>" width="100" height="100">
+            <img src="member_picture/<?php echo h($tweet['picture_path'], ENT_QUOTES, 'UTF-8'); ?>" width="100" height="100">
             <!-- ニックネーム -->
-            <p>投稿者 : <span class="name"> <?php echo htmlspecialchars($tweet['nick_name'], ENT_QUOTES, 'UTF-8') ?> </span></p>
+            <p>投稿者 : <span class="name"> <?php echo h($tweet['nick_name'], ENT_QUOTES, 'UTF-8') ?> </span></p>
             <!-- ツイート内容 -->
             <p>
               つぶやき : <br>
               <?php echo makeLink(h($tweet['tweet'])); ?>
             </p>
             <p class="day delete">
-              <?php echo htmlspecialchars($tweet['created'], ENT_QUOTES, 'UTF-8'); ?>
+              <?php echo h($tweet['created'], ENT_QUOTES, 'UTF-8'); ?>
               <?php if ($_SESSION['id'] == $tweet['member_id']) { ?>
-                [<a href="delete.php?id=<?php echo htmlspecialchars($tweet['tweet_id']); ?>" style="color: #F33;">削除</a>]
+                [<a href="delete.php?id=<?php echo h($tweet['tweet_id']); ?>" style="color: #F33;">削除</a>]
               <?php } ?>
             </p>
           </div>

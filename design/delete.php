@@ -4,6 +4,7 @@ session_start();
 
 require('dbconnect.php');
 
+// ログインチェック
 if (isset($_SESSION['id'])) {
 	$id = $_REQUEST['id'];
 
