@@ -170,27 +170,27 @@ function makeLink($value){
               </div>
             </div>
             <ul class="paging">
+              <?php
+                $word = '';
+                if (isset($_GET['search_word'])) {
+                  $word = '&search_word=' . $_GET['search_word'];
+                }
+              ?>
               <!-- ツイートボタン -->
               <input type="submit" class="btn btn-info" value="つぶやく">
               &nbsp;&nbsp;&nbsp;&nbsp;
-              <!-- ページング --> <!-- 通常の場合(検索ワードがGET送信されていない場合) -->
-              <?php if (empty($_GET['search_word'])) { ?>
+              <!-- ページング -->
                 <?php if ($page > 1) { ?>
-                  <li><a href="index.php?page=<?php echo($page - 1); ?>" class="btn btn-default">前</a></li>
+                  <li><a href="index.php?page=<?php echo($page - 1); ?><?php echo $word; ?>" class="btn btn-default">前</a></li>
                 <?php } else { ?>
                   <li><a class="btn btn-default">前</a></li>
                 <?php } ?>
                 &nbsp;&nbsp;|&nbsp;&nbsp;
                 <?php if ($page < $maxPage) { ?>
-                  <li><a href="index.php?page=<?php echo($page + 1); ?>" class="btn btn-default">次</a></li>
+                  <li><a href="index.php?page=<?php echo($page + 1); ?><?php echo $word; ?>" class="btn btn-default">次</a></li>
                 <?php } else { ?>
                   <li><a class="btn btn-default">次</a></li>
                 <?php } ?>
-              <?php } else { ?> <!-- そうでない場合(検索ワードがGET送信されている場合) -->
-                <li><a class="btn btn-default">前</a></li>
-                &nbsp;&nbsp;|&nbsp;&nbsp;
-                <li><a class="btn btn-default">次</a></li>
-              <?php } ?>
             </ul>
         </form>
       </div>
@@ -225,9 +225,9 @@ function makeLink($value){
                     返信元のメッセージ
                   </a>
                 <?php } ?>
-                [<a hres="#" style="color: #00994C;">編集</a>]
                 <?php if ($_SESSION['id'] == $tweet['member_id']) { ?>
-                  [<a href="delete.php?id=<?php echo h($tweet['tweet_id']); ?>" style="color: #F33;">削除</a>]
+                  [<a hres="edit.php?tweet_id=<?php echo $tweet['tweet_id']; ?>" style="color: #00994C;">編集</a>]
+                  [<a href="delete.php?tweet_id=<?php echo $tweet['tweet_id']; ?>" style="color: #F33;">削除</a>]
                 <?php } ?>
               </p>
             </div>
